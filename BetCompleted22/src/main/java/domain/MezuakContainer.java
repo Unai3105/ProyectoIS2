@@ -1,10 +1,10 @@
 package domain;
 
 public class MezuakContainer {
-	private Message message;
-	private User igorlea;
-	private User hartzailea;
-	private Elkarrizketa elkarrizketa;
+	public Message message;
+	public User igorlea;
+	public User hartzailea;
+	public Elkarrizketa elkarrizketa;
 	
 	public MezuakContainer() {
 		this.igorlea=null;

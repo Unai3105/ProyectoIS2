@@ -745,6 +745,7 @@ public class DataAccess  {
 			
 			db.getTransaction().commit();
 			
+			//String dSartu = "DiruaSartu";
 			this.DiruaSartu(reg1, 50.0, new Date(), "DiruaSartu");
 			this.DiruaSartu(reg2, 50.0, new Date(), "DiruaSartu");
 			this.DiruaSartu(reg3, 50.0, new Date(), "DiruaSartu");
@@ -1134,21 +1135,22 @@ public void open(boolean initializeMode){
 			}
 		}
 	}
-	
+
 	public boolean gertaeraEzabatu(Event ev) {
 		Event event  = db.find(Event.class, ev); 
-		boolean resultB = true; 
-		List<Question> listQ = event.getQuestions(); 
-		
-		for(Question q : listQ) {
-			if(q.getResult() == null) {
-				resultB = false; 
-			}
-		}
+//		boolean resultB = true; 
+		List<Question> listQ = event.getQuestions();
+		boolean resultB = comprobarResultLlenos(listQ);
+//		for(Question q : listQ) {
+//			if(q.getResult() == null) {
+//				resultB = false; 
+//			}
+//		}
 		if(resultB == false) {
 			return false;
 		}else if(new Date().compareTo(event.getEventDate())<0) {
-			TypedQuery<Quote> Qquery = db.createQuery("SELECT q FROM Quote q WHERE q.getQuestion().getEvent().getEventNumber() =?1", Quote.class);
+			TypedQuery<Quote> Qquery = db.createQuery("SELECT q FROM Quote q WHERE q.getQuestion()"
+					+ ".getEvent().getEventNumber() =?1", Quote.class);
 			Qquery.setParameter(1, event.getEventNumber()); 
 			List<Quote> listQUO = Qquery.getResultList();
 			for(int j=0; j<listQUO.size(); j++) {
@@ -1159,11 +1161,7 @@ public void open(boolean initializeMode){
 					db.getTransaction().begin();
 					ap1.removeApustua(quo.getApustuak().get(i));
 					db.getTransaction().commit();
-					if(ap1.getApustuak().isEmpty() && !ap1.getEgoera().equals("galduta")) {
-						this.apustuaEzabatu(ap1.getUser(), ap1);
-					}else if(!ap1.getApustuak().isEmpty() && ap1.irabazitaMarkatu()){
-						this.ApustuaIrabazi(ap1);
-					}
+					actualizarApustua(ap1);
 					db.getTransaction().begin();
 					Sport spo =quo.getQuestion().getEvent().getSport();
 					spo.setApustuKantitatea(spo.getApustuKantitatea()-1);
@@ -1178,6 +1176,24 @@ public void open(boolean initializeMode){
 		db.remove(event);
 		db.getTransaction().commit();
 		return true; 
+	}
+	
+	public boolean comprobarResultLlenos(List<Question> listQ) {
+		boolean resultB = true;
+		for(Question q : listQ) {
+			if(q.getResult() == null) {
+				resultB = false; 
+			}
+		}
+		return resultB;
+	}
+	
+	public void actualizarApustua(ApustuAnitza ap1) {
+		if(ap1.getApustuak().isEmpty() && !ap1.getEgoera().equals("galduta")) {
+			this.apustuaEzabatu(ap1.getUser(), ap1);
+		}else if(!ap1.getApustuak().isEmpty() && ap1.irabazitaMarkatu()){
+			this.ApustuaIrabazi(ap1);
+		}
 	}
 	
 	public String saldoaBistaratu(User u) {
@@ -1206,9 +1222,10 @@ public void open(boolean initializeMode){
 		return lista;
 	}
 	
-	public boolean mezuaBidali(User igorlea, String hartzailea, String titulo, String test, Elkarrizketa elkarrizketa) {
-		User igorle = db.find(User.class, igorlea.getUsername());
-		User hartzaile = db.find(User.class, hartzailea);
+	public boolean mezuaBidali(MezuakContainer mezua, String titulo, String test) {
+//	public boolean mezuaBidali(User igorlea, String hartzailea, String titulo, String test, Elkarrizketa elkarrizketa) {
+		User igorle = db.find(User.class, mezua.igorlea.getUsername());
+		User hartzaile = db.find(User.class, mezua.hartzailea);
 		Elkarrizketa elk=null;
 		if(hartzaile==null) {
 			return false;
@@ -1216,8 +1233,8 @@ public void open(boolean initializeMode){
 			db.getTransaction().begin();
 			Message m = new Message(igorle, hartzaile, test);
 			db.persist(m);
-			if(elkarrizketa!=null) {
-				elk = db.find(Elkarrizketa.class, elkarrizketa.getElkarrizketaNumber());
+			if(mezua.elkarrizketa!=null) {
+				elk = db.find(Elkarrizketa.class, mezua.elkarrizketa.getElkarrizketaNumber());
 			}else {
 				elk= new Elkarrizketa(titulo, igorle, hartzaile);
 				db.persist(elk);

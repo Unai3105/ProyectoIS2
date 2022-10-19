@@ -272,9 +272,13 @@ public class BLFacadeImplementation  implements BLFacade {
     }
 	
 	@WebMethod
-	public boolean mezuaBidali(User igorle, String hartzailea, String titulo, String test, Elkarrizketa m) {
+	public boolean mezuaBidali(User igorle, User hartzailea, String titulo, String test, Elkarrizketa m) {
 		dbManager.open(false);
-		Boolean ema = dbManager.mezuaBidali(igorle, hartzailea, titulo, test, m);
+		MezuakContainer mezua = new MezuakContainer();
+		mezua.igorlea = igorle;
+		mezua.hartzailea = hartzailea;
+		mezua.elkarrizketa = m;
+		Boolean ema = dbManager.mezuaBidali(mezua, titulo, test);
 		dbManager.close();
 		return ema;
 	}
@@ -424,6 +428,12 @@ public class BLFacadeImplementation  implements BLFacade {
 		Sport team = dbManager.findSport(q);
 		dbManager.close();
 		return team;
+	}
+
+	@Override
+	public boolean mezuaBidali(User igorle, String hartzailea, String asunto, String test, Elkarrizketa m) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }
 
